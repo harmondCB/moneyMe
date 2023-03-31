@@ -1,0 +1,85 @@
+﻿@model CustomerFullDetailsViewModel
+
+    <form method="post">
+        <div class="w-75 mx-auto">
+            <div class="d-flex justify-content-center py-4">
+                <label>Quote Calculator</label>
+            </div>
+
+            <div class="py-5">
+                <select class="form-control w-25" asp-for="@Model.SelectedProduct">
+                    @foreach (var item in Model.Products)
+                    {
+                        <option value="@item.Id">@item.Name</option>
+
+                    }
+                </select>
+            </div>
+
+            <div class="form-group py-2">
+                <div class="tooltip-custom">
+                    <input  class="w-100 slider" min="0" max="15000" type="range" asp-for="@Model.Amount" value="@Model.Amount" id="amountRange">
+                    <span class="tooltiptext-custom" id="amountSliderTooltip">Tooltip text</span>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 py-2">
+                        $0
+                    </div>
+                    <div class="col-lg-4 text-lg-center py-2">
+                        How Much Do you Need?
+                    </div>
+                    <div class="col-lg-4 text-lg-right py-2">
+                        $<label id="amountLabel" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group py-2">
+                <div class="tooltip-custom">
+                    <input class="w-100 slider" min="0" max="120" type="range" asp-for="@Model.Term" value="@Model.Term" id="termRange">
+                    <span class="tooltiptext-custom" id="termSliderTooltip">Tooltip text</span>
+                </div>
+                <div>
+                    <label id="termLabel" />
+                </div>
+            </div>
+
+            <div>
+                <div class="row py-2">
+                    <input asp-for="@Model.Customer.Id" type="hidden" value="@Model.Customer.Id" />
+                    <input asp-for="@Model.CustomerPayment.Id" type="hidden" value="@Model.CustomerPayment.Id" />
+                    <div class="col-lg-4">
+                        <input asp-for="@Model.Customer.Title" class="form-control text-custom" placeholder="Title" value="@Model.Customer.Title" />
+                    </div>
+                    <div class="col-lg-4">
+                        <input asp-for="@Model.Customer.FirstName" class="form-control text-custom" placeholder="First Name" value="@Model.Customer.FirstName" />
+                        <span class="text-danger" asp-validation-for="@Model.Customer.FirstName"></span>
+                    </div>
+                    <div class="col-lg-4">
+                        <input asp-for="@Model.Customer.LastName" class="form-control text-custom" placeholder="Last Name" value="@Model.Customer.LastName" />
+                        <span class="text-danger" asp-validation-for="@Model.Customer.LastName"></span>
+                    </div>
+                </div>
+
+                <div class="row py-4">
+                    <div class="col-lg-6">
+                        <input asp-for="@Model.Customer.Email" class="form-control text-custom" placeholder="Email" value="@Model.Customer.Email" />
+                        <span class="text-danger" asp-validation-for="@Model.Customer.Email"></span>
+                    </div>
+                    <div class="col-lg-6">
+                        <input asp-for="@Model.Customer.Mobile" class="form-control text-custom" placeholder="Mobile" value="@Model.Customer.Mobile" />
+                        <span class="text-danger" asp-validation-for="@Model.Customer.Mobile"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div></div>
+            <div class="d-flex justify-content-center py-2">
+                <button class="w-50 btn btn-success calculate-btn">Calculate quote</button>
+            </div>
+            <div class="d-flex justify-content-center">
+                <label>Quote does not affect your credit score</label>
+            </div>
+        </div>
+
+    </form>
