@@ -1,14 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using MoneyMeWebApplication.Objects;
 using MoneyMeWebApplication.ViewModel;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace MoneyMeWebApplication.Controllers
 {
@@ -28,9 +27,10 @@ namespace MoneyMeWebApplication.Controllers
         [HttpGet]
         public async Task<IActionResult> Summary(int id)
         {
+            var result = await GetCustomerSummaryDetails(id);
 
-            return View();
-        }
+            return View(result);
+        }       
 
         [HttpPost]
         public async Task<IActionResult> Index(CustomerFullDetailsViewModel customerFullDetailsViewModel)
@@ -127,68 +127,84 @@ namespace MoneyMeWebApplication.Controllers
                     }
                 }
 
-                return RedirectToAction("Summary", routeId);
+                return RedirectToAction("Summary", new {id = routeId});
             }
             
             return View(customerFullDetailsViewModel);
         }
 
-
-
-        public async Task<CustomerFullDetailsViewModel> GetCustomer(int customerPaymentId)
+        public async Task<CustomerSummaryDetailsViewModel> GetCustomerSummaryDetails(int customerPaymentId)
         {
             Customer customer = new();
-            List<Product> product = new();
             CustomerPayment customerPayment = new();
             CustomerPaymentProduct customerPaymentProduct = new();
 
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(BaseURL);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                HttpResponseMessage Response = await client.GetAsync("api/CustomerPayment/Product/" + customerPaymentId);
+
+                if (Response.IsSuccessStatusCode)
+                {
+                    var result = Response.Content.ReadAsStringAsync().Result;
+                    customerPaymentProduct = JsonConvert.DeserializeObject<CustomerPaymentProduct>(result);
+                }
+            }
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(BaseURL);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                HttpResponseMessage Response = await client.GetAsync("api/CustomerPayment/" + customerPaymentId);
+
+                if (Response.IsSuccessStatusCode)
+                {
+                    var result = Response.Content.ReadAsStringAsync().Result;
+                    customerPayment = JsonConvert.DeserializeObject<CustomerPayment>(result);
+                }
+            }
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(BaseURL);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                HttpResponseMessage Response = await client.GetAsync("api/Customer/" + customerPayment.CustomerId);
+
+                if (Response.IsSuccessStatusCode)
+                {
+                    var result = Response.Content.ReadAsStringAsync().Result;
+                    customer = JsonConvert.DeserializeObject<Customer>(result);
+                }
+            }
+
+            CustomerSummaryDetailsViewModel customerSummaryDetails = new()
+            {
+                Customer = customer,
+                CustomerPayment = customerPayment,
+                CustomerPaymentProduct = customerPaymentProduct
+            };
+
+            return customerSummaryDetails;
+        }
+        public async Task<CustomerFullDetailsViewModel> GetCustomer(int customerPaymentId)
+        {          
+            List<Product> product = new();
+            CustomerSummaryDetailsViewModel customerSummaryDetails = new() { 
+                Customer = new(),
+                CustomerPayment = new(),
+                CustomerPaymentProduct = new()
+            };
+
             if (customerPaymentId != 0)
             {
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(BaseURL);
-                    client.DefaultRequestHeaders.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                    HttpResponseMessage Response = await client.GetAsync("api/CustomerPayment/Product/" + customerPaymentId);
-
-                    if (Response.IsSuccessStatusCode)
-                    {
-                        var result = Response.Content.ReadAsStringAsync().Result;
-                        customerPaymentProduct = JsonConvert.DeserializeObject<CustomerPaymentProduct>(result);
-                    }
-                }
-
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(BaseURL);
-                    client.DefaultRequestHeaders.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                    HttpResponseMessage Response = await client.GetAsync("api/CustomerPayment/" + customerPaymentId);
-
-                    if (Response.IsSuccessStatusCode)
-                    {
-                        var result = Response.Content.ReadAsStringAsync().Result;
-                        customerPayment = JsonConvert.DeserializeObject<CustomerPayment>(result);                     
-                    }
-                }
-
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(BaseURL);
-                    client.DefaultRequestHeaders.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                    HttpResponseMessage Response = await client.GetAsync("api/Customer/" + customerPayment.CustomerId);
-
-                    if (Response.IsSuccessStatusCode)
-                    {
-                        var result = Response.Content.ReadAsStringAsync().Result;
-                        customer = JsonConvert.DeserializeObject<Customer>(result);
-                    }
-                }
-
+                customerSummaryDetails = await GetCustomerSummaryDetails(customerPaymentId);
             }
 
             using (var client = new HttpClient())
@@ -208,14 +224,13 @@ namespace MoneyMeWebApplication.Controllers
 
             CustomerFullDetailsViewModel customerFullDetails = new()
             {
-                Term = customerPayment.Duration,
-                Amount = customerPayment.Amount,
-                CustomerPayment = customerPayment,
-                Customer = customer,
+                Term = customerSummaryDetails.CustomerPayment.Duration, 
+                Amount = customerSummaryDetails.CustomerPayment.Amount,
+                CustomerPayment =  customerSummaryDetails.CustomerPayment,
+                Customer = customerSummaryDetails.Customer,
                 Products = product,
-                SelectedProduct = customerPaymentProduct.ProductId
+                SelectedProduct = customerSummaryDetails.CustomerPaymentProduct.ProductId
             };
-
 
             return customerFullDetails;
         }

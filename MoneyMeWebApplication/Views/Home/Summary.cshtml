@@ -1,4 +1,6 @@
-﻿<form class="w-50 mx-auto" method="post">
+﻿@model CustomerSummaryDetailsViewModel
+
+<form class="w-50 mx-auto" method="post">
     <div class="w-100 d-flex justify-content-center py-3">
         <label class="h4">Your Qoute</label>
     </div>
@@ -15,7 +17,7 @@
             <h6>Name</h6>
         </div>
         <div class="col-lg-5 text-lg-right">
-
+            <label>@Model.Customer.LastName, @Model.Customer.FirstName</label>
         </div>
     </div>
     <div class="row py-1">
@@ -23,7 +25,7 @@
             <h6>Mobile</h6>
         </div>
         <div class="col-lg-5 text-lg-right">
-
+            <label>@Model.Customer.Mobile</label>
         </div>
     </div>
     <div class="row py-1">
@@ -31,7 +33,7 @@
             <h6>Email</h6>
         </div>
         <div class="col-lg-5 text-lg-right">
-
+            <label>@Model.Customer.Email</label>
         </div>
     </div>
     <div class="row py-1">
@@ -47,15 +49,18 @@
             <h6>Finance Amount</h6>
         </div>
         <div class="col-lg-5 text-lg-right">
-
+            <label>@Model.CustomerPayment.Amount</label>
         </div>
     </div>
-    <div class="row py-1">
+    <div class="row py-3">
         <div class="col-lg-7">
             <h6>Repayments from</h6>
         </div>
         <div class="col-lg-5 text-lg-right">
 
         </div>
+    </div>
+    <div class="d-flex justify-content-center py-2">
+        <button class="w-50 btn btn-success calculate-btn">Apply Now</button>
     </div>
 </form>
